@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\gregroe\\code\\powerportal-fileupload-blob2\\fileuploadappgreg.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\gregroe\\code\\powerportal-fileupload-blob2\\fileuploadappgreg.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\gregroe\\code\\powerportal-fileupload-blob2\\fileuploadappgreg.csproj",
+        "projectName": "fileuploadappgreg",
+        "projectPath": "C:\\Users\\gregroe\\code\\powerportal-fileupload-blob2\\fileuploadappgreg.csproj",
+        "packagesPath": "C:\\Users\\gregroe\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\gregroe\\code\\powerportal-fileupload-blob2\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\gregroe\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net461"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net461": {
+            "targetAlias": "net461",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net461": {
+          "targetAlias": "net461",
+          "dependencies": {
+            "Microsoft.NET.Sdk.Functions": {
+              "target": "Package",
+              "version": "[1.0.8, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.106\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

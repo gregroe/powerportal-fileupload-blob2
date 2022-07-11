@@ -1,0 +1,331 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {},
+        "api": {
+          "name": "shared_office365"
+        }
+      },
+      "shared_approvals": {
+        "runtimeSource": "embedded",
+        "connection": {},
+        "api": {
+          "name": "shared_approvals"
+        }
+      },
+      "shared_commondataserviceforapps": {
+        "impersonation": {},
+        "runtimeSource": "embedded",
+        "connection": {},
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "When_a_row_is_added,_modified_or_deleted": {
+          "metadata": {
+            "operationMetadataId": "9351167a-b139-41fe-8e74-a5465527e8f3"
+          },
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger"
+            },
+            "parameters": {
+              "subscriptionRequest/message": 1,
+              "subscriptionRequest/entityname": "new_fileuploads",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/name": ""
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Condition____Javascript_static_web_app_(yes_path)___or_SFTP_(no_path)": {
+          "actions": {
+            "Send_an_email_to_customer_with_upload_instructions": {
+              "runAfter": {
+                "Wait_for_an_approval": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "34547314-a93e-4a66-8d52-9337c8ba2665"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2"
+                },
+                "parameters": {
+                  "emailMessage/To": "@triggerOutputs()?['body/new_email']",
+                  "emailMessage/Subject": "A Message from the Treasury Department: File Upload Instructions for  Web (Small Files) ",
+                  "emailMessage/Body": "<p>Dear: &nbsp;@{triggerOutputs()?['body/new_files']}<br>\n<br>\nPlease navigate to this site to upload your file: &nbsp;<a href=\"https://customerdemoportal.powerappsportals.com/fileupload/\"> Web Upload</a><br>\n<br>\nCopy and &nbsp;use the following SAS URI:<br>\n<br>\n@{body('Create_SAS_URI__for_Customer_Storage_Container')}<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n</p>"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Create_an_approval": {
+              "runAfter": {
+                "Create_SAS_URI__for_Customer_Storage_Container": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "656a5f15-bc04-4e47-895e-9265a43c8984"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+                  "connectionName": "shared_approvals",
+                  "operationId": "CreateAnApproval"
+                },
+                "parameters": {
+                  "approvalType": "Basic",
+                  "ApprovalCreationInput/title": "A customer Fileupload has been requested by @{triggerOutputs()?['body/new_email']}",
+                  "ApprovalCreationInput/assignedTo": "gregroe@m365x536742.onmicrosoft.com;",
+                  "ApprovalCreationInput/details": "Customer Name @{triggerOutputs()?['body/new_files']}\nCustomer Organization @{triggerOutputs()?['body/new_organizationname']}\nCustomer Email @{triggerOutputs()?['body/new_email']}\nFile Description @{triggerOutputs()?['body/new_fileuploaddescription']}\n\nSecurity:\nContainer Location @{body('Create_Customer_Storage_Container_')}\nSecure SAS Uri @{body('Create_SAS_URI__for_Customer_Storage_Container')}",
+                  "ApprovalCreationInput/requestor": "@{triggerOutputs()?['body/new_email']};",
+                  "ApprovalCreationInput/enableNotifications": true,
+                  "ApprovalCreationInput/enableReassignment": true
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Wait_for_an_approval": {
+              "runAfter": {
+                "Create_an_approval": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "12443f54-c492-472a-a2e4-b07d9661dea9"
+              },
+              "type": "OpenApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+                  "connectionName": "shared_approvals",
+                  "operationId": "WaitForAnApproval"
+                },
+                "parameters": {
+                  "approvalName": "@outputs('Create_an_approval')?['body/name']"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Create_Customer_Storage_Container_": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "26530354-ead7-4bee-83e3-1b39ee0bbf3c"
+              },
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "https://fileuploadappgreg.azurewebsites.net/api/CreateStorageContainer",
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "queries": {
+                  "ContainerName": "@triggerOutputs()?['body/new_organizationname']"
+                }
+              }
+            },
+            "Create_SAS_URI__for_Customer_Storage_Container": {
+              "runAfter": {
+                "Create_Customer_Storage_Container_": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "b014b646-3dc6-4509-8ec8-f2d5503d5992"
+              },
+              "type": "Http",
+              "inputs": {
+                "method": "POST",
+                "uri": "https://fileuploadappgreg.azurewebsites.net/api/CreateContainerSAStoken",
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "queries": {
+                  "ContainerName": "@triggerOutputs()?['body/new_organizationname']"
+                }
+              }
+            }
+          },
+          "runAfter": {},
+          "else": {
+            "actions": {
+              "Create_new_Sftp_Local_User_on_Azure_Blob": {
+                "runAfter": {},
+                "metadata": {
+                  "operationMetadataId": "1f1e6a0a-b2bd-4d02-8c95-967810431abf"
+                },
+                "type": "Http",
+                "inputs": {
+                  "method": "POST",
+                  "uri": "https://fileuploadappgreg.azurewebsites.net/api/CreateFTPSUser?",
+                  "headers": {
+                    "Content-Type": "application/json"
+                  },
+                  "queries": {
+                    "ContainerName": "@triggerOutputs()?['body/new_organizationname']",
+                    "username": "@triggerOutputs()?['body/new_organizationname']"
+                  }
+                }
+              },
+              "Send_an_email_(V2)_2": {
+                "runAfter": {
+                  "Wait_for_an_approval_for_Customer_sftp_large_File_Upload": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "c6146653-aef4-4317-aa01-a30a2ef60b18"
+                },
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                    "connectionName": "shared_office365",
+                    "operationId": "SendEmailV2"
+                  },
+                  "parameters": {
+                    "emailMessage/To": "@triggerOutputs()?['body/new_email']",
+                    "emailMessage/Subject": "A Message from the Treasury Department: File Upload Instructions for  FTP (Large File) ",
+                    "emailMessage/Body": "<p>Dear: &nbsp;@{triggerOutputs()?['body/new_files']}<br>\n<br>\n<br>\nUpload your large file with your SFTP Client using the following Server and password:<br>\n<br>\n<br>\nSFTP SERVER:<br>\nsftpnewgreg.@{triggerOutputs()?['body/new_organizationname']}@sftpnewgreg.blob.core.windows.net<br>\n<br>\n@{body('Create_Password_for_Sftp_Local_User')}<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n<br>\n=============OLD OLD OLD=============<br>\n<strong>&nbsp;Please follow the &nbsp;below FTP &nbsp;Large File Instructions:<br>\n<br>\nFrom your SFTP Client &nbsp;of choice, upload your with the following credentials<br>\n<br>\nOn your Windows Client Machine:<br>\n</strong><em>1. Open a command prompt &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em><em><strong>(Search CMD)</strong></em><em><br>\n2. navigate to your file upload directory &nbsp;e.g. </em><em><strong>cd C:\\Users\\username\\fileuploads</strong></em><em><br>\n3. Enter the following SFTP Commands:</em><strong><br>\n</strong><br>\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3a. &nbsp;C:\\Users\\username\\fileuploads&gt;<strong> Sftp ftpftpftp.treasurycustomer@ftpftpftp.blob.core.windows.net<br>\n</strong><br>\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3b. &nbsp;At the Password Prompt enter:&nbsp;&nbsp;<strong>&nbsp;/aWsj0/Jln5WgJU14iGWD6HghM+M3ZibAB7DSC7bNsnmgnnj+Y9lY3/gyWRegt3ZxjKR89tSBspIooCGGiwCpg==</strong><br>\n<br>\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3c &nbsp;&nbsp;sftp&gt; <strong>PUT &nbsp;'yourfilename'</strong></p>"
+                  },
+                  "authentication": "@parameters('$authentication')"
+                }
+              },
+              "Create_Password_for_Sftp_Local_User": {
+                "runAfter": {
+                  "Create_Home_Directory_container_for_new_Sftp_Local_User": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "3ad13f27-0c9a-43d7-bfb4-8ecc3366d7dc"
+                },
+                "type": "Http",
+                "inputs": {
+                  "method": "POST",
+                  "uri": "https://fileuploadappgreg.azurewebsites.net/api/CreateSftpUserPassword",
+                  "headers": {
+                    "Content-Type": "application/json"
+                  },
+                  "queries": {
+                    "username": "@triggerOutputs()?['body/new_organizationname']"
+                  }
+                }
+              },
+              "Create_an_approval__for_Customer_Sftp_large_File_Upload": {
+                "runAfter": {
+                  "Create_Password_for_Sftp_Local_User": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "0a913373-5bf2-46d9-a28a-e88b5ad26aac"
+                },
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+                    "connectionName": "shared_approvals",
+                    "operationId": "CreateAnApproval"
+                  },
+                  "parameters": {
+                    "approvalType": "Basic",
+                    "ApprovalCreationInput/title": "Please Reviev Customer Sftp Large File Upload for @{triggerOutputs()?['body/new_email']}",
+                    "ApprovalCreationInput/assignedTo": "gregroe@m365x536742.onmicrosoft.com;",
+                    "ApprovalCreationInput/details": "Customer @{triggerOutputs()?['body/new_files']}\nOrganication @{triggerOutputs()?['body/new_organizationname']}\nemail  @{triggerOutputs()?['body/new_email']}\nFile Upload Description @{triggerOutputs()?['body/new_fileuploaddescription']}",
+                    "ApprovalCreationInput/enableNotifications": true,
+                    "ApprovalCreationInput/enableReassignment": true
+                  },
+                  "authentication": "@parameters('$authentication')"
+                }
+              },
+              "Wait_for_an_approval_for_Customer_sftp_large_File_Upload": {
+                "runAfter": {
+                  "Create_an_approval__for_Customer_Sftp_large_File_Upload": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "d22149d9-7481-456c-b96f-d4038cad9eab"
+                },
+                "type": "OpenApiConnectionWebhook",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+                    "connectionName": "shared_approvals",
+                    "operationId": "WaitForAnApproval"
+                  },
+                  "parameters": {
+                    "approvalName": "@outputs('Create_an_approval__for_Customer_Sftp_large_File_Upload')?['body/name']"
+                  },
+                  "authentication": "@parameters('$authentication')"
+                }
+              },
+              "Create_Home_Directory_container_for_new_Sftp_Local_User": {
+                "runAfter": {
+                  "Create_new_Sftp_Local_User_on_Azure_Blob": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "5e71e127-27e0-4371-82a4-e276b6544761"
+                },
+                "type": "Http",
+                "inputs": {
+                  "method": "POST",
+                  "uri": "https://fileuploadappgreg.azurewebsites.net/api/CreateSFTPhomeDirectory",
+                  "headers": {
+                    "Content-Type": "application/json"
+                  },
+                  "queries": {
+                    "ContainerName": "@triggerOutputs()?['body/new_organizationname']"
+                  }
+                }
+              }
+            }
+          },
+          "expression": {
+            "equals": [
+              "@triggerOutputs()?['body/new_fileuploadtype']",
+              2
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "66bb3490-6d5a-464e-87dc-ddb9300ed2a6"
+          },
+          "type": "If"
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0"
+}
