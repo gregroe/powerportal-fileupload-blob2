@@ -50,12 +50,20 @@
 4.  In the Azure Portal Create 2 Storage Accounts
      - Web File Uploads ---   Storage Account V2(general purpose v2).  Performace Premium
      - SFTP             ---   Storage Account V2(general purpose v2).  Performace Premium 
-          -- Engable Hierarchical namespace and SFTP  see https://docs.microsoft.com/en-us/azure/storage/blobs/secure-file-transfer-protocol-support-how-to?tabs=azure-portal
+          -- Enable Hierarchical namespace and SFTP  see https://docs.microsoft.com/en-us/azure/storage/blobs/secure-file-transfer-protocol-support-how-to?tabs=azure-portal
+          -- Enable Static Web
+          -- in Containers/$web/index.html    copy the contents of UploadFile.html
+     
+5. Setup CORS for Azure Function
      
 X. Set up Managed Identity and RBAC for the Funtion App
      
      4a.  in the azure portal select your Azure Function App
      4b.  on the left panel, select Identity
      4c.   Turn on System assigned Managed Identiy
+     
+X.  Set up Power Portal Entity Form
+ 
+X.  Set up Power Portal Iframe pointing to the static web app fileupload.html
 
 
