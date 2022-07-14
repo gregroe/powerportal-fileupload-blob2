@@ -30,3 +30,6 @@
 
 
 ![Alt Image text](/architecture.png?raw=true "Architecture")
+
+### Deployment Instructions
+
