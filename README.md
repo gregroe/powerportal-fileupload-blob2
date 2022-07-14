@@ -32,4 +32,6 @@
 ![Alt Image text](/architecture.png?raw=true "Architecture")
 
 ### Deployment Instructions
+download the soltuion via zip or clone
+![Alt Image text](/download.png?raw=true "Architecture")
 
