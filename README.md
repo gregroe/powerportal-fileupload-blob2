@@ -32,6 +32,11 @@
 ![Alt Image text](/architecture.png?raw=true "Architecture")
 
 ### Deployment Instructions
-download the soltuion via zip or clone
+1. Download the soltuion via zip or clone
+
 ![Alt Image text](/download.png?raw=true "Architecture")
+
+2. Import the Power App Solution into your Power Apps environment
+     2a. From Power Apps Studio go to Solutions Tab. 
+     2b. Import solution.  Navigate to your hard drive download location to the solution/Powerapp/Solution/PowerPortalFileUploadviablobSASorSFTP_1_0_0_1.zip
 
