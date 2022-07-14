@@ -38,5 +38,24 @@
 
 2. Import the Power App Solution into your Power Apps environment
      2a. From Power Apps Studio go to Solutions Tab. 
-     2b. Import solution.  Navigate to your hard drive download location to the solution/Powerapp/Solution/PowerPortalFileUploadviablobSASorSFTP_1_0_0_1.zip
+     2b. Import solution.  Navigate to your hard drive download location to the solution/Powerapp/Solution/PowerPortalFileUploadviablobSASorSFTP_x.zip
+ 
+3. Create and Import Azure Function App
+     3a. In the Azure Portal.. create a new function app.  Create a resource group for everything
+     3b. zip deployment from command line using AZ CLI
+         - Install the Azure CLI for Windows | Microsoft Docs
+         -  Az login
+         -  az functionapp deployment source config-zip -g <Resource Group Name> -n <Function App Name>  --src <sourcefile.zip>
+     
+4.  In the Azure Portal Create 2 Storage Accounts
+     - Web File Uploads ---   Storage Account V2(general purpose v2).  Performace Premium
+     - SFTP             ---   Storage Account V2(general purpose v2).  Performace Premium 
+          -- Engable Hierarchical namespace and SFTP  see https://docs.microsoft.com/en-us/azure/storage/blobs/secure-file-transfer-protocol-support-how-to?tabs=azure-portal
+     
+X. Set up Managed Identity and RBAC for the Funtion App
+     
+     4a.  in the azure portal select your Azure Function App
+     4b.  on the left panel, select Identity
+     4c.   Turn on System assigned Managed Identiy
+
 
